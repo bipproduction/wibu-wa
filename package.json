@@ -9,18 +9,33 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@mantine/core": "^7.12.0",
+    "@mantine/hooks": "^7.12.0",
+    "@prisma/client": "^5.18.0",
+    "@types/qrcode-terminal": "^0.12.0",
+    "@whiskeysockets/baileys": "https://github.com/bipproduction/Baileys.git",
+    "colors": "^1.4.0",
+    "dotenv": "^16.4.5",
+    "firebase": "^10.12.5",
+    "firebase-admin": "^12.3.1",
+    "js-base64": "^3.7.7",
+    "next": "14.2.5",
+    "qrcode-terminal": "^0.12.0",
     "react": "^18",
-    "react-dom": "^18",
-    "next": "14.2.5"
+    "react-dom": "^18"
   },
   "devDependencies": {
-    "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
+    "@types/socket.io": "^3.0.2",
+    "@types/socket.io-client": "^3.0.0",
     "eslint": "^8",
-    "eslint-config-next": "14.2.5"
+    "eslint-config-next": "14.2.5",
+    "postcss": "^8.4.41",
+    "postcss-preset-mantine": "^1.17.0",
+    "postcss-simple-vars": "^7.0.1",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
 }

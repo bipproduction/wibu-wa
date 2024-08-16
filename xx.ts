@@ -1,13 +1,16 @@
 import { Boom } from "@hapi/boom";
 import makeWASocket, {
-    DisconnectReason,
-    useMultiFileAuthState as multiFileAuthState
+  DisconnectReason,
+  useMultiFileAuthState as multiFileAuthState,
 } from "@whiskeysockets/baileys";
 import "colors";
 import path from "path";
-import qr from 'qrcode-terminal';
+// import qr from "qrcode-terminal";
+import prisma from "./src/lib/prisma";
+import {eventServer} from 'wibu-event/server'
 
 const authDir = path.join(process.cwd(), "auth");
+const event = eventServer({ projectId: "wa" });
 
 export async function startWa() {
   const { state, saveCreds } = await multiFileAuthState(authDir);
@@ -30,32 +33,49 @@ export async function startWa() {
       }
     } else if (connection === "open") {
       console.log("opened connection".green);
-      // wa = sock as any
     }
 
     if (update.qr != undefined && update.qr != null) {
       console.log("QR UPDATE".yellow, update.qr);
-      qr.generate(update.qr, { small: true });
-      // io.emit('qr', update.qr)
+      const qr = update.qr;
+      event.set("qr", qr);
+      //   await updateEvent("qr", qr);
     }
 
     if (update.connection) {
-      // io.emit("con", update.connection)
       console.log("con".cyan);
+      const connection = update.connection;
+      await updateEvent("connection", connection);
     }
     if (update.isNewLogin) {
-      // io.emit("new", update.isNewLogin)
       console.log("new".cyan);
     }
     if (update.isOnline) {
-      // io.emit("online", update.isOnline)
       console.log("online".cyan);
+      const isOnline = update.isOnline;
+      await updateEvent("isOnline", isOnline);
     }
     if (update.lastDisconnect) {
-      // io.emit("dis", update.lastDisconnect)
       console.log("dis".cyan);
+      const lastDisconnect = update.lastDisconnect as any;
+      await updateEvent("lastDisconnect", lastDisconnect);
     }
   });
 }
 
 startWa();
+
+async function updateEvent(id: string, data: any) {
+  await prisma.event.upsert({
+    where: {
+      id,
+    },
+    create: {
+      id,
+      data,
+    },
+    update: {
+      data,
+    },
+  });
+}

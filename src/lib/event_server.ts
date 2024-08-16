@@ -31,41 +31,13 @@ if (!admin.apps.length) {
 
 const realtimeDB = admin.database();
 
-function eventServer<T extends readonly string[]>({
-  projectId,
-  listSubscribe,
-}: {
-  projectId: string;
-  listSubscribe: T;
-}) {
-  type Subscribe = T[number];
+// Cache untuk menyimpan listener yang sudah diinisialisasi
+const listenerCache: Record<string, boolean> = {};
 
-  function onUpdate({
-    subscribe,
-    event,
-  }: {
-    subscribe: Subscribe;
-    event: () => void;
-  }) {
+function eventServer<T>({ projectId }: { projectId: string }) {
+  function set<T>(subscribe: T, data: T, onSuccess?: () => void) {
     const ref = realtimeDB.ref(`wibu/${projectId}/${subscribe}`);
-
-    ref.on("value", () => {
-      event();
-    });
-
-    // Return a cleanup function to remove the listener
-    return () => ref.off("value");
-  }
-
-  function update({
-    subscribe,
-    onSuccess,
-  }: {
-    subscribe: Subscribe;
-    onSuccess?: () => void;
-  }) {
-    const ref = realtimeDB.ref(`wibu/${projectId}/${subscribe}`);
-    ref.set({ data: Math.random() }, (err) => {
+    ref.set({ data }, (err) => {
       if (err) {
         console.log("Error setting value:", err);
         return;
@@ -74,23 +46,31 @@ function eventServer<T extends readonly string[]>({
     });
   }
 
-  function onChange({
-    subscribe,
-    event,
-  }: {
-    subscribe: Subscribe;
-    event: () => void;
-  }) {
-    const ref = realtimeDB.ref(`wibu/${projectId}/${subscribe}`);
+  function onChange<T>(subscribe: T, event: (val: T) => void) {
+    const refPath = `wibu/${projectId}/${subscribe}`;
+
+    // Cek jika listener sudah ada, jika sudah, skip
+    if (listenerCache[refPath]) {
+      return;
+    }
+
+    const ref = realtimeDB.ref(refPath);
+
     ref.on("child_changed", (snapshot) => {
-      event();
+      event(snapshot.val());
     });
 
+    // Tandai listener sebagai sudah diinisialisasi
+    listenerCache[refPath] = true;
+
     // Return a cleanup function to remove the listener
-    return () => ref.off("child_changed");
+    return () => {
+      ref.off("child_changed");
+      delete listenerCache[refPath]; // Hapus dari cache saat listener dilepas
+    };
   }
 
-  return { onUpdate, update, onChange };
+  return { onChange, set };
 }
 
-export { eventServer };
+export const server_bak = ""
